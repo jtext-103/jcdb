@@ -1,0 +1,44 @@
+@using System.Web.Http
+@using System.Web.Http.Controllers
+@using System.Web.Http.Description
+@using System.Collections.ObjectModel
+@using WebAPI.Areas.HelpPage.Models
+@model Collection<ApiDescription>
+
+@{
+    ViewBag.Title = "JDBC Web API Document";
+
+    // Group APIs by controller
+    ILookup<HttpControllerDescriptor, ApiDescription> apiGroups = Model.ToLookup(api => api.ActionDescriptor.ControllerDescriptor);
+}
+
+<link type="text/css" href="~/Areas/HelpPage/HelpPage.css" rel="stylesheet" />
+<header class="help-page">
+    <div class="content-wrapper">
+        <div class="float-left">
+            <h1>
+                @ViewBag.Title
+                <a class="btn btn-default pull-right" href="/home/index">API Test</a>
+                <a class="btn btn-default pull-right" href="/Visualization/Panel/Index">Visualization</a>
+            </h1>
+        </div>
+    </div>
+</header>
+<div id="body" class="help-page">
+    <section class="featured">
+        <div class="content-wrapper">
+            <ul>
+                <li>支持GET、POST、PUT、Delete四种方法</li>
+                <li>"?"开头的Query分成三种："_"开头的UriQuery，"__"开头的UriFragment，其它为常规UrlQuery</li>
+                <li>UriQuery已支持/id/和/path/查询</li>
+                <li>Description中【】表示form提交的body信息，Query路径相关的参数如包含'='等特殊字符，需前后添加引号，参数之间用分号隔开</li>
+            </ul>
+        </div>
+    </section>
+    <section class="content-wrapper main-content clear-fix">
+        @foreach (var group in apiGroups)
+        {
+            @Html.DisplayFor(m => group, "ApiGroup")
+        }
+    </section>
+</div>

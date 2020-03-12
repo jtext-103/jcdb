@@ -1,0 +1,1257 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>JDBC Visualization</title>
+    <link rel="stylesheet" href="~/Content/bootstrap.css" />
+    <link rel="stylesheet" href="~/Content/ztree/zTreeStyle/zTreeStyle.css" type="text/css">
+    <link rel="stylesheet" href="~/Content/Visualization.css" type="text/css" />
+    @Scripts.Render("~/bundles/modernizr")
+    @Scripts.Render("~/bundles/jquery")
+    @Scripts.Render("~/bundles/bootstrap")
+    <script src="~/Scripts/ztree/jquery.ztree.core.js"></script>
+    <script src="~/Scripts/ztree/jquery.ztree.exedit.min.js"></script>
+    <script src="~/Scripts/Site.js"></script>
+</head>
+<body>
+    <div class="v-panel">
+        <div class="v-top">
+            <nav class="navbar navbar-default" role="navigation">
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <div class="navbar-brand">
+                        <span>JDBC Visualization</span>
+                    </div>
+                </div>
+                <div class="collapse navbar-collapse">
+                    <ul class="nav navbar-nav">
+                        <li class="API"><a href="/Home/Index">API Test</a></li>
+                        <li class="API"><a href="/Help/Index">API Document</a></li>
+                    </ul>
+                    <ul class="nav navbar-nav navbar-right">
+                        <li class="logout hidden-sm"><a href="#">By WKH</a></li>
+                    </ul>
+                </div>
+            </nav>
+        </div>
+        <div class="clearfix"></div>
+        <div class="v-body">
+            <div class="v-main">
+                <div class="v-left">
+                    <div class="v-container">
+                        <div class="input-group v-input">
+                            <select class="form-control" id="config">
+                                <option value="" selected>[Empty config]</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-sm btn-info" id="AddConfig">Add Config</button>
+                        <button class="btn btn-sm btn-danger" id="DeleteConfig" style="display:none;">Delete Config</button>
+                        <button class="btn btn-sm btn-primary" id="SaveConfig" style="display:none;">Save Config</button>
+                    </div>
+                    <div class="v-container">
+                        <div class="input-group v-input">
+                            <input type="text" class="form-control" id="rootNodePath">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="button" id="setRootNode">Set Root</button>
+                            </span>
+                        </div>
+                        <ul id="tree" class="ztree"></ul>
+                    </div>
+                    <div class="v-container" id="nodeProperty">
+                        <button class="btn btn-sm btn-block btn-success" id="View">View data in windows</button>
+                        <strong class="nodeLabel"></strong>
+                        <ul class="extra"></ul>
+                        <div class="nodeOperation">
+                            <button class="btn btn-sm btn-info" id="Add">Add Node</button>
+                            <button class="btn btn-sm btn-danger" id="Delete" style="display:none;">Delete Node</button>
+                            <button class="btn btn-sm btn-warning" id="Update" style="display:none;">Update Node</button>
+                            <button class="btn btn-sm btn-warning" id="UpdateRoot">Update Root</button>
+                            <button class="btn btn-sm btn-primary" id="Move" style="display:none;">Move</button>
+                            <button class="btn btn-sm btn-primary" id="Duplicate" style="display:none;">Duplicate Node</button>
+                            <button class="btn btn-sm btn-default" id="Expand" style="display:none;">Expand Node</button>
+                            <button class="btn btn-sm btn-default" id="ExpandRoot">Expand Root</button>
+                            <button class="btn btn-sm btn-default" id="Collapse" style="display:none;">Collapse Node</button>
+                            <button class="btn btn-sm btn-default" id="CollapseRoot">Collapse Root</button>
+                            <button class="btn btn-sm btn-info" id="Modify" style="display:none;">Modify Node</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="v-right">
+                    <div class="input-group">
+                        <input type="text" class="form-control" id="replaceRule" placeholder=">>>"/>
+                        <span class="input-group-btn">
+                            <button class="btn btn-default" type="button" id="replaceFrames">Replace</button>
+                        </span>
+                    </div>
+                    <div class="row" id="iframes"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="modal-render">
+        <div id="alertModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title"><b class="title"></b><span class="countDown"></span></h4>
+                    </div>
+                    <div class="modal-body">
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="addConfigModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title"></h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group">
+                            <input class="form-control"/>
+                        </div>
+                        <div class="error"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" onclick="addNewConfig()">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="confirmModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title">Confirm</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p></p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-danger" data-dismiss="modal">No</button>
+                        <button type="button" class="btn btn-primary">Yes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="viewModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Select View</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" method="post">
+                            <div class="cards row">
+
+                            </div>
+                            <div class="form-group about-node">
+                                <label>Choose the type</label>
+                                <select class="form-control select select-primary select-block mbl" name="type">
+                                    <option>Spreadsheet</option>
+                                    <option selected>LineChart</option>
+                                    <option>ScatterChart</option>
+                                    <option>3DChart</option>
+                                    <option>ContourChart</option>
+                                </select>
+                            </div>
+                            <div class="form-group about-node about-signal" style="display:none;">
+                                <label>from</label>
+                                <input type="text" class="form-control" name="from" />
+                                <label>to</label>
+                                <input type="text" class="form-control" name="to" />
+                            </div>
+                        </form>
+                        <div class="error"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                        <button class="btn btn-primary apply" onclick="ApplyView()">Apply</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="addNodeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Add Node</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" method="post">
+                            <div class="form-group">
+                                <label>Choose the type</label>
+                                <select class="form-control select-entity select-primary select-block mbl" name="type">
+                                    <option class="experiment" selected>experiment</option>
+                                    <option class="signal">signal</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" class="form-control" name="name" />
+                            </div>
+                            <div class="form-group about-signal" style="display:none;">
+                                <label>Choose the datatype</label>
+                                <select class="form-control select-signal select-primary select-block mbl" name="datatype">
+                                    <option>FixedWave-int</option>
+                                    <option>FixedWave-double</option>
+                                </select>
+                            </div>
+                            <div class="form-group about-signal" style="display:none;">
+                                <label>Init</label>
+                                <input type="text" class="form-control" name="init" />
+                            </div>
+                            <div class="form-group extra">
+                                <label>Extra inforamtion</label><span class="pull-right glyphicon glyphicon-plus clickable"></span>
+                            </div>
+                        </form>
+                        <div class="error"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                        <button class="btn btn-primary" onclick="AddNode()">Add</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="moveNodeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Move Node[<span class="frompath"></span>]</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" method="post">
+                            <input type="text" class="hidden" name="from" />
+                            <div class="form-group">
+                                <label>Destination Path</label>
+                                <ul id="moveNodeTree" class="ztree"></ul>
+                                <input type="text" class="form-control" name="to" readonly/>
+                            </div>
+                            <div class="form-group">
+                                <label>New Name</label>
+                                <input type="text" class="form-control" name="newname" />
+                            </div>
+                        </form>
+                        <div class="error"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                        <button class="btn btn-primary" onclick="MoveNode()">Move</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="duplicateNodeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Duplicate Node[<span class="frompath"></span>]</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" method="post">
+                            <input type="text" class="hidden" name="from" />
+                            <div class="form-group">
+                                <label>Destination Path</label>
+                                <ul id="duplicateNodeTree" class="ztree"></ul>
+                                <input type="text" class="form-control" name="to" readonly/>
+                            </div>
+                            <div class="form-group">
+                                <label>New Name</label>
+                                <input type="text" class="form-control" name="newname" />
+                            </div>
+                        </form>
+                        <div class="error"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                        <button class="btn btn-primary" onclick="DuplicateNode()">Duplicate</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="modifyNodeModal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+                        <h4 class="modal-title">Modify Node[<span class="path"></span>]</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" method="post">
+                            <input type="text" class="hidden" name="node" />
+                            <div class="form-group">
+                                <label>Choose the modify type</label>
+                                <select class="form-control select-type select-primary select-block mbl">
+                                    <option selected>rename</option>
+                                    <option>modify extra</option>
+                                </select>
+                            </div>
+                            <div class="form-group name">
+                                <label>Name</label>
+                                <input type="text" class="form-control" name="name" />
+                            </div>
+                            <div class="form-group extra" style="display:none;">
+                                <label>Extra inforamtion</label><span class="pull-right glyphicon glyphicon-plus clickable"></span>
+                            </div>
+                        </form>
+                        <div class="error"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+                        <button class="btn btn-primary" onclick="ModifyNode()">Modify</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        //let this snippet run before your hashchange event binding code
+        if (!window.HashChangeEvent) (function () {
+            var lastURL = document.URL;
+            window.addEventListener("hashchange", function (event) {
+                Object.defineProperty(event, "oldURL", { enumerable: true, configurable: true, value: lastURL });
+                Object.defineProperty(event, "newURL", { enumerable: true, configurable: true, value: document.URL });
+                lastURL = document.URL;
+            });
+        }());
+        
+        // 根据window.source跟新hash
+        function refreshHash() {
+            var srcs = [];
+            for (var key in window.source.views) {
+                if (window.source.views.hasOwnProperty(key)) {
+                    srcs.push(window.source.views[key]);
+                }
+            }
+            if (window.source.root) {
+                hash = srcs.unshift('root=' + window.source.root);
+            }
+            if (!$('#config').val()) {
+                $('#config').css('border-color', 'red');
+            }
+            window.location.hash = srcs.join(';');
+        }
+        // 根据hash更新window.source（ini为true时）,拉取内容
+        function loadContent(init) {
+            // 加载内容
+            window.source = {
+                root: '',
+                views: {}
+            };
+            if (window.location.hash.length > 0) {
+                var contentUri = window.location.hash.substring(1).split(';');
+                for (var i = 0; i < contentUri.length; i++) {
+                    var rootIndex = contentUri[i].indexOf('root=');
+                    var titleIndex = contentUri[i].indexOf('title=');
+                    if (rootIndex === 0) { //初始化tree
+                        window.source.root = contentUri[i].substr(5);
+                    } else if (titleIndex > -1) { //初始化iframe
+                        var title = contentUri[i].substr(titleIndex + 6);
+                        window.source.views[title] = contentUri[i];
+                        addIframe(contentUri[i]);
+                    }
+                }  
+            }
+            for (var i = 0; i < $('#iframes iframe').length; i++) {
+                var $iframe = $('#iframes iframe').eq(i);
+                if (!window.source.views[$iframe.attr('id')]) {
+                    $iframe.remove();
+                    var $card = $('#viewModal .cards .card[data-iframe="' + $iframe.attr('id') + '"]');
+                    $card.remove();
+                }
+            }
+            $('#iframes iframe,#viewModal .cards .card').removeClass('col-xs-4 col-xs-6 col-xs-12');
+            if ($('#iframes iframe').length === 1) {
+                $('#iframes iframe').attr('height', '800px');
+                $('#iframes iframe,#viewModal .cards .card').addClass('col-xs-12');
+            } else if ($('#iframes iframe').length === 2) {
+                $('#iframes iframe').attr('height', '400px');
+                $('#iframes iframe,#viewModal .cards .card').addClass('col-xs-12');
+            } else if ($('#iframes iframe').length < 5) {
+                $('#iframes iframe').attr('height', '400px');
+                $('#iframes iframe,#viewModal .cards .card').addClass('col-xs-6');
+            } else {
+                $('#iframes iframe').attr('height', '300px');
+                $('#iframes iframe,#viewModal .cards .card').addClass('col-xs-4');
+            }
+            if (init) { //初次加载
+                var setting = {
+                    async: {
+                        enable: true,
+                        url: getAsyncUrl,
+                        type: 'get',
+                        otherParam: { '_name': '*' },
+                        dataFilter: filter
+                    },
+                    data: {
+                        keep: {
+                            leaf: true,
+                            parent: true
+                        },
+                        key: {
+                            name: 'Name'
+                        },
+                        simpleData: {
+                            enable: true,
+                            idKey: 'Id',
+                            pIdKey: 'ParentId',
+                            rootPId: '00000000-0000-0000-0000-000000000000'
+                        }
+                    },
+                    edit: {
+                        enable: true,
+                        showRemoveBtn: false,
+                        showRenameBtn: false
+                    },
+                    view: {
+                        autoCancelSelected: true,
+                        selectedMulti: false,
+                        fontCss: {}
+                    },
+                    callback: {
+                        beforeRename: zTreeBeforeRename,
+                        beforeRemove: zTreeBeforeRemove,
+                        onClick: zTreeOnClick,
+                        onAsyncError: zTreeOnAsyncError
+                    }
+                };
+                $.fn.zTree.init($('#tree'), setting);
+            } else if (window.source.root !== $('#rootNodePath').attr('placeholder')) {
+                $('#UpdateRoot').click();
+            }
+            $('#rootNodePath').attr('placeholder', window.source.root);
+            $('#rootNodePath').val(window.source.root);
+        }
+        // ztree相关
+        function filter(treeId, parentNode, childNodes) {
+            if (!childNodes) return null;
+            for (var i = 0, l = childNodes.length; i < l; i++) {
+                if (childNodes[i].EntityType === 0) {
+                    childNodes[i].isParent = true;
+                } else {
+                    childNodes[i].isParent = false;
+                }
+            }
+            return childNodes;
+        }
+        function getAsyncUrl(treeId, treeNode) {
+            if (treeNode) {
+                return '/entity/id/' + treeNode.Id;
+            } else if (window.source.root) {
+                return '/entity/path/' + window.source.root;
+            } else {
+                return '/entity/id/';
+            }
+        }
+        function zTreeBeforeRemove(treeId, treeNode) {
+            $('#confirmModal').modal('show');
+            $('#confirmModal p').text('Are you sure to delete Node by cascade: ' + treeNode.Path + ' ?');
+            $('#confirmModal button.btn-primary').off().one('click', function () {
+                $.ajax({
+                    type: 'DELETE',
+                    url: '/entity/id/' + treeNode.Id + '?recursive=true',
+                    success: function (data) {
+                        var treeObj = $.fn.zTree.getZTreeObj(treeId);
+                        treeObj.removeNode(treeNode);
+                        console.log(treeObj);
+                    },
+                    error: function (request, message, error) {
+                        if (request.responseJSON) {
+                            alertModal(JSON.stringify(request.responseJSON.Fail), -1);
+                        }
+                        else {
+                            alertModal(JSON.stringify(request.responseText), -1);
+                        }
+                    },
+                    complete: function () {
+                        $('#confirmModal').modal('hide');
+                    }
+                });
+            });
+            return false;
+        }
+        function zTreeBeforeRename(treeId, treeNode, newName, isCancel) {
+            return newName.length > 1;
+        }
+        function zTreeOnClick(event, treeId, treeNode) {
+            var treeObj = $.fn.zTree.getZTreeObj(treeId);
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                var info = selectedItem.ExtraInformation;
+                $('#nodeProperty').data('id', selectedItem.Id);
+                var type = '';
+                if (selectedItem.EntityType == 1) {
+                    type = 'Signal';
+                    $('#Update,#Expand,#Collapse,#Add').hide();
+                    $('#Modify,#Delete,#Move,#Duplicate').show();
+                }
+                else {
+                    type = 'Experiment';
+                    $('#Update,#Expand,#Collapse,#Add,#Modify,#Delete,#Move,#Duplicate').show();
+                }
+                $('#nodeProperty .nodeLabel').text(type + '：' + selectedItem.Path);
+                $('#nodeProperty .extra').empty();
+                for (var x in info) {
+                    $('#nodeProperty .extra').append('<li>' + x + '：' + info[x] + '</li>');
+                }
+            } else {
+                $('#Add,#UpdateRoot,#ExpandRoot,#CollapseRoot').show();
+                $('#Modify,#Delete,#Expand,#Collapse,#Move,#Duplicate').hide();
+            }
+        };
+        function zTreeOnSelect(event, treeId, treeNode) {
+            var treeObj = $.fn.zTree.getZTreeObj(treeId);
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                if (selectedItem.EntityType === 0) {
+                    $('#' + treeId).siblings('input').val('/path'+selectedItem.Path);
+                } else {
+                    $('#' + treeId).siblings('input').val('');
+                }
+            } else {
+                $('#' + treeId).siblings('input').val('');
+            }
+        };
+        function zTreeOnAsyncError(event, treeId, treeNode, XMLHttpRequest, textStatus, errorThrown) {
+            alertModal(XMLHttpRequest.responseText,-1);
+            //console.debug(event, treeId, treeNode, XMLHttpRequest, textStatus, errorThrown);
+        }
+        // use config
+        $('#config').change(function (e) {
+            var config = $('#config').val();
+            if (e.originalEvent) { // 手动选择
+                location.hash = config;
+            }
+            if (config) {
+                $('#DeleteConfig,#SaveConfig').show();
+            } else {
+                $('#DeleteConfig,#SaveConfig').hide();
+            }
+            $('#config').css('border-color', '#cccccc');
+            loadContent(true);
+        });
+        // save config
+        $('#SaveConfig').click(function () {
+            var $selected = $('#config option:selected');
+            var configName = $selected.text();
+            var configVal = $selected.val();
+            if (configVal) {
+                $('#config option:selected').val(location.hash);
+                localStorage.setItem(configName, location.hash);
+                alertModal('Config [' + configName + '] has been saved successfully!');
+            }
+        });
+        // add config
+        $('#AddConfig').click(function () {
+            $('#addConfigModal .modal-title').text('Please input a new config name to save the content:');
+            $('#addConfigModal').modal('show');
+        });
+        function addNewConfig() {
+            var configName = $('#addConfigModal input').val();
+            if (configName === null || configName === "") {
+                $('#addConfigModal .error').text('The config name can not be empty!');
+            } else if (localStorage.getItem(configName)) {
+                $('#addConfigModal .error').text(configName + ' already exists!');
+            } else {
+                $('#config').append('<option value="' + location.hash + '">' + configName + '</option>');
+                localStorage.setItem(configName, location.hash);
+                $('#config').val(location.hash);
+                $('#config').trigger('change');
+                $('#addConfigModal').modal('hide');
+            }
+        }
+        $('#addConfigModal').on('hidden.bs.modal', function (e) {
+            $('#addConfigModal .error').text('');
+        });
+        // delete config
+        $('#DeleteConfig').click(function () {
+            var $selected = $('#config option:selected');
+            var configName = $selected.text();
+            var configVal = $selected.val();
+            if (configVal) {
+                $('#config').val('');
+                $selected.remove();
+                localStorage.removeItem(configName);
+                $('#config').trigger('change');
+                alertModal('Config [' + configName + '] has been deleted successfully!');
+            }
+        });
+        // set root node
+        $('#setRootNode').click(function () {
+            window.source.root = $('#rootNodePath').val().trim();
+            refreshHash();
+        });
+        $('#rootNodePath').keypress(function (event) {
+            if (event.keyCode == "13") {
+                $('#setRootNode').click();
+            }
+        });
+        // set replace rule
+        $('#replaceFrames').click(function () {
+            var reg = /\/\w+\/(\w+)/g;
+            for(var key in window.source.views){
+                if (window.source.views.hasOwnProperty(key)) {
+                    var url = window.source.views[key];
+                    var hashIndex = url.indexOf('#');
+                    var hashObj = convertHashToObject(url.substr(hashIndex));
+                    var pathArray = [];
+                    var lastIndex = 0;
+                    var ret = reg.exec(hashObj.paths);
+                    while(ret !== null){
+                        //console.debug(ret);
+                        var index = ret[0].indexOf(ret[1]);
+                        pathArray.push(hashObj.paths.substring(lastIndex, ret.index+index));
+                        lastIndex = ret.index + ret[0].length;
+                        ret = reg.exec(hashObj.paths);
+                    }
+                    pathArray.push(hashObj.paths.substr(lastIndex));
+                    hashObj.paths = pathArray.join($('#replaceRule').val());
+                    window.source.views[key] = url.substring(0, hashIndex + 1) + convertObjectToQuery(hashObj);
+                }
+            }
+            refreshHash();
+            //console.debug(window.source);
+        });
+        $('#replaceRule').keypress(function (event) {
+            if (event.keyCode == "13") {
+                $('#replaceFrames').click();
+            }
+        });
+        // Add
+        $('#Add').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                $('#addNodeModal .modal-title').text('Add Node to ' + selectedNodes[0].Path);
+                $('#addNodeModal .select option').show();
+            }
+            else {
+                $('#addNodeModal .modal-title').text('Add Node as Root');
+                $('#addNodeModal .select').val('experiment');
+                $('#addNodeModal .select option.signal').hide();
+            }
+            $('#addNodeModal .select-entity').val('experiment');
+            $('#addNodeModal').modal('show');
+        }); 
+        $('#addNodeModal .select-entity').change(function (e) {
+            switch($(this).val())
+            {
+                case 'signal':
+                    $('#addNodeModal form input[name="init"]').val('StartTime=0&SampleInterval=0.1');
+                    $('#addNodeModal .about-signal').show();
+                    break;
+                default:
+                    $('#addNodeModal .about-signal').hide();
+                    break;
+            }
+        });
+        $('#addNodeModal .extra .glyphicon-plus').click(function () {
+            $('#addNodeModal .extra').append('<div class="row"><div class="col-xs-6"><input type="text" class="form-control key" placeholder="Key"/></div><div class="col-xs-6"><input type="text" class="form-control value" placeholder="Value"/></div><input class="key-value" name="extra[]" style="display:none;" /></div>');
+        });
+        $('#addNodeModal').on('hidden.bs.modal', function (e) {
+            $('#addNodeModal .select').val('experiment');
+            $('#addNodeModal .about-signal').hide();
+            $('#addNodeModal form .extra div.row').remove();
+            $('#addNodeModal .error').hide();
+        });
+        function AddNode() {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            var parentId = '';
+            var parentNode = null;
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                parentNode = selectedNodes[0];
+                parentId = parentNode.Id
+            }
+            var extra = $('#addNodeModal form .extra div.row');
+            for (var j = 0; j < extra.length; j++) {
+                var extraKey = $(extra[j]).find('input.key');
+                var key = $.trim(extraKey.val());
+                var extraValue = $(extra[j]).find('input.value');
+                var value = $.trim(extraValue.val());
+                if (key == '' || value == '') {
+                    $(extra[j]).remove();
+                }
+                else {
+                    $(extra[j]).find('input.key-value').val(key + ':::' + value);
+                }
+            }
+
+            $.post('/entity/id/' + parentId, $('#addNodeModal form').serialize(), function (data) {
+                treeObj.reAsyncChildNodes(parentNode, "refresh");
+                $('#addNodeModal').modal('hide');
+            }).error(function (request, message, error) {
+                if (request.responseJSON) {
+                    $('#addNodeModal .error').text(JSON.stringify(request.responseJSON.Fail));
+                }
+                else {
+                    $('#addNodeModal .error').text(JSON.stringify(request.responseText));
+                }
+            });
+        }
+        // Delete
+        $('#Delete').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                treeObj.removeNode(selectedNodes[0], true);
+            }
+        });
+        // Update
+        $('#Update').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                treeObj.reAsyncChildNodes(selectedNodes[0], 'refresh');
+            }
+        });
+        // Update All
+        $('#UpdateRoot').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            treeObj.reAsyncChildNodes(null, 'refresh');
+            $('#nodeProperty').data('id', '');
+            $('#nodeProperty .extra').empty();
+            $('#nodeProperty .nodeLabel').text('');
+            $('#Add,#UpdateRoot,#ExpandRoot,#CollapseRoot').show();
+            $('#Modify,#Delete,#Expand,#Collapse,#Move,#Duplicate').hide();
+        });
+        // Modify
+        $('#Modify').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                var info = selectedItem.ExtraInformation;
+                $('#modifyNodeModal .modal-title .path').text(selectedItem.Path);
+                $('#modifyNodeModal input[name="node"]').val(selectedItem.Id);
+                $('#modifyNodeModal .select-type').trigger('change');
+                $('#modifyNodeModal .name input').val(selectedItem.Name);
+                $('#modifyNodeModal .extra .row').remove();
+                var basicReg = /^\[.*\]$/;
+                for (var x in info) {
+                    if (!basicReg.test(x)) {
+                        $('#modifyNodeModal .extra').append('<div class="row"><div class="col-xs-6"><input type="text" class="form-control key" placeholder="Key" value="' + x + '"/></div><div class="col-xs-6"><input type="text" class="form-control value" name="extra[]" placeholder="Value" value="' + info[x] + '"/></div></div>');
+                    }
+                }
+                $('#modifyNodeModal').modal('show');
+            }
+        });
+        $('#modifyNodeModal .select-type').change(function (e) {
+            switch ($(this).val()) {
+                case 'rename':
+                    $('#modifyNodeModal .name').show();
+                    $('#modifyNodeModal .extra').hide();
+                    break;
+                case 'modify extra':
+                    $('#modifyNodeModal .extra').show();
+                    $('#modifyNodeModal .name').hide();
+                    break;
+                default:
+                    break;
+            }
+        });
+        $('#modifyNodeModal .extra .glyphicon-plus').click(function () {
+            $('#modifyNodeModal .extra').append('<div class="row"><div class="col-xs-6"><input type="text" class="form-control key" placeholder="Key"/></div><div class="col-xs-6"><input type="text" class="form-control value" name="extra[]" placeholder="Value"/></div></div>');
+        });
+        function ModifyNode() {
+            var type = $('#modifyNodeModal').find('select.select-type').val();
+            switch (type) {
+                case 'rename':
+                    $.ajax({
+                        type: 'PUT',
+                        url: '/entity/rename',
+                        data: $('#modifyNodeModal form').serialize(),
+                        success: function (data) {
+                            var treeObj = $.fn.zTree.getZTreeObj("tree");
+                            var node = treeObj.getNodeByParam("Id", data[0].Id, null);
+                            node.Name = data[0].Name;
+                            treeObj.updateNode(node);
+                            $('#modifyNodeModal').modal('hide');
+                        },
+                        error: function (request, message, error) {
+                            if (request.responseJSON) {
+                                alertModal(JSON.stringify(request.responseJSON.Fail), -1);
+                            }
+                            else {
+                                alertModal(JSON.stringify(request.responseText), -1);
+                            }
+                        }
+                    });
+                    break;
+                case 'modify extra':
+                    var extra = $('#modifyNodeModal form .extra div.row');
+                    for (var j = 0; j < extra.length; j++) {
+                        var extraKey = $(extra[j]).find('input.key');
+                        var key = $.trim(extraKey.val());
+                        var extraValue = $(extra[j]).find('input.value');
+                        var value = $.trim(extraValue.val());
+                        if (key == '' || value == '') {
+                            $(extra[j]).remove();
+                        }
+                        else {
+                            $(extraValue).val(key + ':::' + value);
+                        }
+                    }
+                    $.ajax({
+                        type: 'PUT',
+                        url: '/entity/extra',
+                        data: $('#modifyNodeModal form').serialize(),
+                        success: function (data) {
+                            var treeObj = $.fn.zTree.getZTreeObj("tree");
+                            var node = treeObj.getNodeByParam("Id", data[0].Id, null);
+                            node.ExtraInformation = data[0].ExtraInformation;
+                            zTreeOnClick(null, 'tree', node);
+                            $('#modifyNodeModal').modal('hide');
+                        },
+                        error: function (request, message, error) {
+                            if (request.responseJSON) {
+                                $('#modifyNodeModal .error').text(JSON.stringify(request.responseJSON.Fail));
+                            }
+                            else {
+                                $('#modifyNodeModal .error').text(JSON.stringify(request.responseText));
+                            }
+                        }
+                    });
+                    break;
+                default:
+                    break;
+            }
+        }
+        $('#modifyNodeModal').on('shown.bs.modal', function (e) {
+            $('#modifyNodeModal .error').hide();
+        });
+        //Duplicate
+        $('#Duplicate').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                $('#duplicateNodeModal .frompath').text(selectedItem.Path);
+                $('#duplicateNodeModal input[name="from"]').val('/id/' + selectedItem.Id);
+                $('#duplicateNodeModal').modal('show');
+            }
+        }); 
+        $('#duplicateNodeModal').on('shown.bs.modal', function (e) {
+            $('#duplicateNodeModal .error').hide();
+            var setting = {
+                async: {
+                    enable: true,
+                    url: getAsyncUrl,
+                    type: 'get',
+                    otherParam: { '_name': '*' },
+                    dataFilter: filter
+                },
+                data: {
+                    key: {
+                        name: 'Name'
+                    },
+                    simpleData: {
+                        enable: true,
+                        idKey: 'Id',
+                        pIdKey: 'ParentId',
+                        rootPId: '00000000-0000-0000-0000-000000000000'
+                    }
+                },
+                view: {
+                    autoCancelSelected: true,
+                    selectedMulti: false
+                },
+                callback: {
+                    onClick: zTreeOnSelect
+                }
+            };
+            $.fn.zTree.init($('#duplicateNodeTree'), setting);
+        });
+        $('#duplicateNodeModal').on('hidden.bs.modal', function (e) {
+            $.fn.zTree.destroy("duplicateNodeTree");
+        });
+        function DuplicateNode() {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                var toPath = $('#duplicateNodeModal form input[name="to"]').val();
+                if (!toPath) {
+                    $('#duplicateNodeModal .error').text('Please select an experiment node!').show();
+                    return;
+                } else if (toPath.indexOf(selectedItem.Path) !== -1) {
+                    $('#duplicateNodeModal .error').text('The node can not be duplicated to this Path!').show();
+                    return;
+                }
+                $.ajax({
+                    type: 'PUT',
+                    url: '/entity/duplicate?recursive=false',
+                    data: $('#duplicateNodeModal form').serialize(),
+                    success: function (data) {
+                        $('#UpdateRoot').trigger('click');
+                        $('#duplicateNodeModal').modal('hide');
+                    },
+                    error: function (request, message, error) {
+                        if (request.responseJSON) {
+                            $('#duplicateNodeModal .error').text(JSON.stringify(request.responseJSON.Fail));
+                        }
+                        else {
+                            $('#duplicateNodeModal .error').text(JSON.stringify(request.responseText));
+                        }
+                    }
+                });
+            }
+        }
+        //Move
+        $('#Move').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                $('#moveNodeModal .frompath').text(selectedItem.Path);
+                $('#moveNodeModal input[name="from"]').val('/id/' + selectedItem.Id);
+                $('#moveNodeModal').modal('show');
+            }
+        }); 
+        $('#moveNodeModal').on('shown.bs.modal', function (e) {
+            $('#moveNodeModal .error').hide();
+            var setting = {
+                async: {
+                    enable: true,
+                    url: getAsyncUrl,
+                    type: 'get',
+                    otherParam: { '_name': '*' },
+                    dataFilter: filter
+                },
+                data: {
+                    key: {
+                        name: 'Name'
+                    },
+                    simpleData: {
+                        enable: true,
+                        idKey: 'Id',
+                        pIdKey: 'ParentId',
+                        rootPId: '00000000-0000-0000-0000-000000000000'
+                    }
+                },
+                view: {
+                    autoCancelSelected: true,
+                    selectedMulti: false
+                },
+                callback: {
+                    onClick: zTreeOnSelect
+                }
+            };
+            $.fn.zTree.init($('#moveNodeTree'), setting);
+        });
+        $('#moveNodeModal').on('hidden.bs.modal', function (e) {
+            $.fn.zTree.destroy("moveNodeTree");
+        });
+        function MoveNode() {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                var toPath = $('#moveNodeModal form input[name="to"]').val();
+                if (!toPath) {
+                    $('#moveNodeModal .error').text('Please select an experiment node!').show();
+                    return;
+                } else if (toPath && toPath.indexOf(selectedItem.Path) !== -1) {
+                    $('#moveNodeModal .error').text('The node can not be moved to this Path!').show();
+                    return;
+                }
+                $.ajax({
+                    type: 'PUT',
+                    url: '/entity/move?copydata=true',
+                    data: $('#moveNodeModal form').serialize(),
+                    success: function (data) {
+                        $('#UpdateRoot').trigger('click');
+                        $('#moveNodeModal').modal('hide');
+                    },
+                    error: function (request, message, error) {
+                        if (request.responseJSON) {
+                            $('#moveNodeModal .error').text(JSON.stringify(request.responseJSON.Fail));
+                        }
+                        else {
+                            $('#moveNodeModal .error').text(JSON.stringify(request.responseText));
+                        }
+                    }
+                });
+            }
+        }
+        // Expand
+        $('#Expand').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj("tree");
+            var nodes = treeObj.getSelectedNodes();
+            if (nodes.length > 0) {
+                treeObj.expandNode(nodes[0], true, true, true);
+            }
+        });
+        // Expand All
+        $('#ExpandRoot').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var nodes = treeObj.getNodesByParam("level", "0", null);
+            for (var i = 0; i < nodes.length; i++) {
+                treeObj.expandNode(nodes[i], true, false, false);
+            }
+        });
+        // Collapse
+        $('#Collapse').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj("tree");
+            var nodes = treeObj.getSelectedNodes();
+            if (nodes.length > 0) {
+                treeObj.expandNode(nodes[0], false, true, true);
+            }
+        });
+        // Collapse All
+        $('#CollapseRoot').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var nodes = treeObj.getNodesByParam("level", "0", null);
+            for (var i = 0; i < nodes.length; i++) {
+                treeObj.expandNode(nodes[i], false, false, false);
+            }
+        });
+        // View
+        $('#View').click(function () {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            $('#viewModal .about-node').hide();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                var info = selectedItem.ExtraInformation;
+                $('#viewModal .about-node').show();
+                $('#viewModal .modal-footer .apply').show(); console.log(selectedItem);
+                if (selectedItem.EntityType === 1) {
+                    $('#viewModal .about-signal').show();
+                    //$('#viewModal form [name="from"]').val(info['[Start]']);
+                    //$('#viewModal form [name="to"]').val(info['[End]']);
+                }
+                else {
+                    $('#viewModal .about-signal').hide();
+                }
+            }
+            else {
+                $('#viewModal .about-node').hide();
+                $('#viewModal .modal-footer .apply').hide();
+            }
+            $('#viewModal').modal('show');
+        });
+        $('#viewModal .cards').delegate('.card', 'click', function (e) {
+            $(this).siblings('.card').removeClass('active');
+            $(this).toggleClass('active');
+        });
+        $('#viewModal .cards').delegate('.card .glyphicon', 'click', function (e) {
+            var ID = $(this).closest('.card').data('iframe');
+            delete window.source.views[ID];
+            refreshHash();
+        });
+        $('#viewModal .select').change(function (e) {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+            }
+        });
+        $('#viewModal').on('hidden.bs.modal', function (e) {
+            //$('#viewModal .select').val('experiment');
+            $('#viewModal .cards .card').removeClass('active');
+        });
+        $('#viewModal').on('shown.bs.modal', function (e) {
+            $('#viewModal .error').hide();
+        });
+        function ApplyView() {
+            var treeObj = $.fn.zTree.getZTreeObj('tree');
+            var selectedNodes = treeObj.getSelectedNodes();
+            if (selectedNodes !== null && selectedNodes.length !== 0) {
+                var selectedItem = selectedNodes[0];
+                var selectedType = $('#viewModal form [name="type"]').val();
+                var from = $('#viewModal form [name="from"]').val();
+                var to = $('#viewModal form [name="to"]').val();
+                var viewSource = {
+                    paths: [selectedItem.Path]
+                };
+                var iframeSrc;
+
+                switch (selectedType) { //选择显示控件，设置iframeSrc前缀
+                    case 'Spreadsheet':
+                        iframeSrc = '/Visualization/Panel/Spreadsheet#';
+                        break;
+                    case 'LineChart':
+                        iframeSrc = '/Visualization/Panel/LineChart#';
+                        break;
+                    case 'ScatterChart':
+                        iframeSrc = '/Visualization/Panel/ScatterChart#';
+                        break;
+                    case '3DChart':
+                        iframeSrc = '/Visualization/Panel/ThreeDChart#';
+                        break;
+                    case 'ContourChart':
+                        iframeSrc = '/Visualization/Panel/ContourChart#';
+                        break;
+                    default:
+                        console.log(selectedType);
+                        return;
+                }
+
+                // 选择已有窗口添加信号显示
+                var $selectedCard = $('#viewModal .card.active');
+                if ($selectedCard.length > 0) {
+                    var ID = $selectedCard.data('iframe');
+                    var selectedSrc = $('#' + ID).attr('src');
+                    var selectedSrcArray = selectedSrc.substr(selectedSrc.indexOf('#') + 1).split('&');
+                    var selectedSrcDic = {};
+                    for (var i = 0; i < selectedSrcArray.length; i++) {
+                        var pair = selectedSrcArray[i].split('=');
+                        if (pair.length === 2) {
+                            selectedSrcDic[pair[0]] = pair[1];
+                        }
+                    }
+                    
+                    if (selectedSrcDic.paths && selectedSrcDic.paths.indexOf(selectedItem.Path) === -1) {
+                        selectedSrcDic.paths += ',' + selectedItem.Path;
+                    } else {
+                        selectedSrcDic.paths = selectedItem.Path;
+                    }
+
+                    if (from) {
+                        selectedSrcDic.from = from;
+                    }
+                    if (to) {
+                        selectedSrcDic.to = to;
+                    }
+
+                    iframeSrc += convertObjectToQuery(selectedSrcDic);
+                    window.source.views[ID] = iframeSrc;
+                } else { //在新窗口中进行显示
+                    var now = new Date();
+                    viewSource.title = 'panel' + now.getTime();
+                    iframeSrc += convertObjectToQuery(viewSource);
+                    window.source.views[viewSource.title] = iframeSrc;
+                }
+                refreshHash();
+                $('#viewModal').modal('hide');
+            }
+        }
+
+        // 添加可视化数据，如对应iframe不存在则新建
+        function addIframe(src, userAdd) {
+            var now = new Date();
+            var start = src.indexOf('title=');
+            var ID = 0;
+            if (start === -1) {
+                ID = 'panel' + now.getTime();
+                src += '&title=' + ID;
+            } else {
+                ID = src.substr(start + 6);
+                var $iframe = $('#'+ID);
+            }
+
+            if ($iframe.length > 0) {
+                $iframe.attr('src', src);
+            } else if ($('#iframes iframe').length == 9) {
+                $('#viewModal .error').text('The window count limit is 9!').show();
+                return;
+            } else {
+                var active = userAdd ? 'active' : '';
+                $('#iframes').append('<iframe src="' + src + '" id="' + ID + '" frameborder="0" scrolling="auto" sandbox="allow-scripts allow-popups allow-modals allow-same-origin allow-forms">iframe is not supported by your browser!</iframe>');
+                $('#viewModal .cards').append('<div class="card ' + active + '" data-iframe="' + ID + '">' +
+                                '<div class="content">' +
+                                        ID +
+                                    '<span class="glyphicon glyphicon-remove" title="remove"></span>' +
+                                '</div>' +
+                            '</div>');
+            }
+        } 
+        // iframe通信
+        function AllSameXScale(src, xrange) {
+            for (var i = 0; i < window.frames.length; i++) {
+                var dst = window.frames[i].query.title;
+                var operation = window.frames[i].setXRange;
+                if (dst !== src && operation) {
+                    operation(xrange);
+                }
+            }
+        }
+        function AllSameYScale(src, yrange) {
+            for (var i = 0; i < window.frames.length; i++) {
+                var dst = window.frames[i].query.title;
+                var operation = window.frames[i].setYRange;
+                if (dst !== src && operation) {
+                    operation(yrange);
+                }
+            }
+        }
+        function AllSameScale(src, xrange, yrange) {
+            for (var i = 0; i < $('#iframes iframe').length; i++) {
+                var dst = window.frames[i].query.title;
+                var operation = window.frames[i].setAllRange;
+                if (dst !== src && operation) {
+                    operation(xrange, yrange);
+                }
+            }
+        }
+        // 页面初始化
+        $(function () {
+            var information = '@ViewBag.Information';
+            if (information) {
+                alertModal(information, 5000);
+            }
+            $('.navbar-brand').css('cursor', 'pointer').css('color', 'white').click(function (e) {
+                e.preventDefault();
+                if ($(window).width() <= 768) {
+                    $('.v-left').toggle();
+                }
+            });
+            // 加载配置项
+            var ifSetConfig = false;
+            for (var i = 0; i < localStorage.length; i++) {
+                var configName = localStorage.key(i);
+                var configVal = localStorage.getItem(configName);
+                var reg = /^#/;
+                if (reg.test(configVal)) {
+                    $('#config').append('<option value="' + configVal + '">' + configName + '</option>');
+                    if (configVal === location.hash) {
+                        ifSetConfig = true;
+                    }
+                }
+            }
+            if (ifSetConfig) {
+                $('#config').val(location.hash);
+                $('#config').trigger('change');
+            } else {
+                if (location.hash !== '') {
+                    $('#config').css('border-color', 'red');
+                }
+                loadContent(true);
+            }
+            // 监测hash变化
+            window.onhashchange = function () {
+                //console.log("#######" + location.hash);
+                loadContent();
+            };
+        });
+    </script>
+</body>
+</html>

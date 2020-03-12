@@ -1,0 +1,77 @@
+﻿<ul>
+    <li id="OpenNewTab" class="showInFrame">Open in new tab</li>
+</ul>
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            query = getHashJson();
+            idArray = query.ids.split(',');
+            // 设置图表全局对象
+            window.chartDom = document.getElementById('chartContainer');
+            $('#title').text(query.title);
+            var layout = {
+                showlegend: true,
+                height: $(window).height(),
+                margin: { l: 30, r: 30, b: 0, t: 30, pad: 0 },
+                hovermode: 'closest',
+                legend: {
+                    'orientation': 'h'
+                }
+            };
+            //console.log(Plotly.Icons);
+            var options = {
+                showTips: false,
+                displayModeBar: true,
+                displaylogo: false,
+                scrollZoom: false,
+            };
+            var pointCount = 31;
+            var i, r;
+            var x = [];
+            var y = [];
+            var z = [];
+            var c = [];
+            for (i = 0; i < pointCount; i++) {
+                r = 10 * Math.cos(i / 10);
+                x.push(r * Math.cos(i));
+                y.push(r * Math.sin(i));
+                z.push(i);
+                c.push(i)
+            }
+            var data = [{
+                type: 'scatter3d',
+                mode: 'lines+markers',
+                x: x,
+                y: y,
+                z: z,
+                line: {
+                    width: 6,
+                    color: c,
+                    colorscale: "Viridis"
+                },
+                marker: {
+                    size: 3.5,
+                    color: c,
+                    colorscale: "Greens",
+                    cmin: -20,
+                    cmax: 50
+                }
+            }];
+            Plotly.plot(chartDom, data, layout, options);
+            $('#loding').fadeOut();
+            //右键菜单
+            $("#scopeMenu ul li").click(function () {
+                switch ($(this).attr("id")) {
+                    case 'OpenNewTab':
+                        window.open(location.href);
+                        break;
+                    default:
+                        break;
+                }
+                $("#scopeMenu").fadeOut(200);
+            });
+        });
+    </script>
+}

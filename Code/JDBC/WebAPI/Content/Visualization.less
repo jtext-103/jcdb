@@ -1,0 +1,224 @@
+﻿/*
+    可用Koala编译为css后使用
+*/
+
+//定义全局颜色
+@primary:#333333;
+@second:#666666;
+@highlight:rgb(26, 188, 156);
+
+@banner-bg:#000000;
+@navbar-bg:#333333;
+@secondnavbar-bg:#666666;
+@primary-bg:#bbbbbb;
+@second-bg:#f8f8f8;
+@panel:rgba(200,200,200,0.4);
+
+@white:#ffffff;
+@black:#202020;
+@gray:#999999;
+@blue:#5a98de;
+@lightblue:#87cefa;
+@hover:rgb(255, 64, 129);
+@green:#5cb85c;
+
+html,body,.v-panel {
+    height:100%;
+    overflow:auto;
+    background-color:@gray;
+}
+ul{
+    padding:0;
+}
+.ztree .node_name{
+    font-size:14px;
+}
+.col-xs-1, .col-xs-2, .col-xs-3, .col-xs-4, .col-xs-5, .col-xs-6, .col-xs-7, .col-xs-8, .col-xs-9, .col-xs-10, .col-xs-11, .col-xs-12, .col-sm-1, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9, .col-sm-10, .col-sm-11, .col-sm-12, .col-md-1, .col-md-2, .col-md-3, .col-md-4, .col-md-5, .col-md-6, .col-md-7, .col-md-8, .col-md-9, .col-md-10, .col-md-11, .col-md-12, .col-lg-1, .col-lg-2, .col-lg-3, .col-lg-4, .col-lg-5, .col-lg-6, .col-lg-7, .col-lg-8, .col-lg-9, .col-lg-10, .col-lg-11, .col-lg-12 {
+  padding-left:0;
+  padding-right:0;
+}
+.error{
+    color:red;
+}
+
+.v-top{
+    z-index:500;
+    position:fixed;
+    top:0;
+    left:0;
+    right:0;
+    height:50px;
+    .navbar {
+        width:100%;
+        top:0;
+        margin-bottom:0;
+        border-radius:initial;
+        &.navbar-default {
+            background-color: @primary-bg;
+            border: none;
+        }
+        .navbar-header{
+            .navbar-brand{
+                font-weight: bold;
+            }
+        }
+        .navbar-collapse {
+            .navbar-nav {
+                li{
+                    display: inline-block;
+                    position:relative;
+                    &.active{
+                        a{
+                            color: @hover;
+                            &.name{
+                                color:@hover;
+                            }
+                        }
+                    }
+                    a{
+                        color:@white;
+                        font-weight: bold;
+                        text-decoration: none;
+                        &.name{
+                            color:@blue;
+                        }
+                        &:hover,&:focus{
+                            color: @hover;
+                            outline:none;
+                        }
+                    }
+                    .status{
+                        position:absolute;
+                        color:@white;
+                        font-size:10px;
+                        padding-left:3px;
+                        padding-right:3px;
+                        -moz-border-radius:50%;
+                        -webkit-border-radius:50%;
+	                    border-radius:50%;
+                        &.OK {
+                            left:10px;
+                            top:1px;
+                            background:#16A085;
+                        }
+                        &.Error {
+                            left:10px;
+                            bottom:1px;
+                            background:#C0392B;
+                        }
+                        &.Offline {
+                            right:10px;
+                            bottom:1px;
+                            background:#2C3E50;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+.v-body{
+    position:absolute;
+    top:50px;
+    bottom:0;
+    left:0;
+    right:0;
+    .v-main{
+        display: flex;
+        flex-flow: row;
+        .v-left{
+            flex: 1 2 20%;
+            .v-container{
+                width:100%;
+                padding:0 5px;
+                .v-input{
+                    width:100%;
+                    margin-bottom:10px;
+                }
+            }
+        }
+        .v-right{
+            flex: 2 1 80%; 
+            background-color:@white;
+            .row{
+                margin:0;
+            }
+        }
+    }
+}
+footer{
+    background-color:@gray;
+    left:0;
+    right:0;
+    bottom:0;
+    padding-bottom:10px;
+}
+.row{
+    margin:0;
+}
+.cards{
+    .card{
+        .content{
+            position:relative;
+            margin:5px;
+            padding:10px;
+            text-align:center;
+            background-color:@second;
+            color:white;
+            cursor:pointer;
+            .glyphicon{
+                position:absolute;
+                top:3px;
+                right:3px;
+            }
+        }
+        &:hover,&.active{
+            .content{
+                background-color:@hover;
+            }
+        }
+    } 
+}
+.clickable{
+    cursor:pointer;
+    &:hover{
+        color:@hover;
+    }
+}
+.modal-body{
+    padding-bottom:0 !important;
+}
+.btn-sm{
+    margin:3px;
+}
+input.form-control{
+    margin-bottom:3px;
+}
+iframe{
+    //display:block;
+    vertical-align:bottom;
+    outline:solid 1px @gray;
+}
+
+//通过媒体查询定义在不同尺寸下的表现形式
+@media (max-width: 768px) {
+    .v-left{
+        z-index:300;
+        display:none;
+        position:fixed;
+        top:50px;
+        bottom:0;
+        width:100%;
+        background-color:@gray;
+        flex:none;
+        overflow:auto;
+    }
+    .v-right{
+        width:100%;
+        flex:none;
+    }
+    iframe{
+        width:100% !important;
+        height:400px !important;
+    }
+}

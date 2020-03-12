@@ -1,0 +1,176 @@
+﻿<ul>
+    <li id="Reload">Reload</li>
+    <li id="ResetXScale">Reset X Scale</li>
+    <li id="ResetYScale">Reset Y Scale</li>
+    <li id="AllSameScale" class="showInFrame">All same scale</li>
+    <li id="AllSameXScale" class="showInFrame">All same X scale</li>
+    <li id="AllSameYScale" class="showInFrame">All same Y scale</li>
+    <li id="OpenNewTab" class="showInFrame">Open in new tab</li>
+</ul>
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            query = convertHashToObject();
+            pathArray = query.paths.split(',');
+            // 设置图表全局对象
+            window.chartDom = document.getElementById('chartContainer');
+            $('#title').text(query.title);
+            var layout = {
+                showlegend: true,
+                height: $(window).height(),
+                margin: { l: 30, r: 30, b: 0, t: 30, pad: 0 },
+                hovermode: 'x',
+                legend: {
+                    'orientation': 'h'
+                }
+            };
+            //console.log(Plotly.Icons);
+            var options = {
+                modeBarButtons: [[{
+                    name: 'custom',
+                    icon: Plotly.Icons.question,
+                    click: function() {
+                        alert('a');
+                    }
+                }], ['toImage', 'pan2d', 'zoomIn2d', 'zoomOut2d', 'autoScale2d']],
+                showTips: false,
+                displayModeBar: true,
+                displaylogo: false,
+                scrollZoom: false,
+            };
+            //modeBarButtonsToRemove: ['sendDataToCloud', 'zoom2d', 'resetScale2d', 'hoverClosestCartesian', 'hoverCompareCartesian', 'lasso2d']
+            Plotly.plot(chartDom, [], layout, options).then(function () {
+                for (var i = 0; i < pathArray.length; i++) {
+                    addTrace(pathArray[i], query.from, query.to, true);
+                }
+            });
+            
+            window.onhashchange = function () {
+                query = convertHashToObject();
+                var pathArrayNew = query.paths.split(',');
+                console.log(pathArray);
+                for (var i = 0; i < pathArrayNew.length; i++) {
+                    var index = pathArray.indexOf(pathArrayNew[i]);
+                    if (index === -1) {//添加新的trace
+                        console.log(pathArrayNew[i]);
+                        addTrace(pathArrayNew[i], query.from, query.to);
+                        pathArray.push(pathArrayNew[i]);
+                    }
+                }
+                for (var j = 0; j < chartDom.data.length; j++) {
+                    var path = chartDom.data[j].path;
+                    var index = pathArray.indexOf(path)
+                    if (index !== -1) {//删除不存在的trace
+                        Plotly.deleteTraces(chartDom, j);
+                        delete pathArray[index];
+                    }
+                }
+            };
+            chartDom.on('plotly_relayout', function (eventdata) { //bug 需要限制移动到数据范围外
+                //console.log(eventdata);
+                if (eventdata.width || eventdata.height) { //窗口尺寸不请求新数据
+                    return;
+                }
+                if (eventdata.yaxis && !eventdata.xaxis) { //仅y轴缩放不请求新数据
+                    return;
+                } else if (!eventdata['xaxis.range[0]'] || !eventdata['xaxis.range[1]']) { //初始情况
+                    eventdata['xaxis.range[0]'] = query.from;
+                    eventdata['xaxis.range[1]'] = query.to;
+                }
+                chartDom.data = [];//清空数据 bug:操作快时可能会重复添加一个信号，需要研究删除trace的方法
+                for (var i = 0; i < pathArray.length; i++) {
+                    addTrace(pathArray[i], eventdata['xaxis.range[0]'], eventdata['xaxis.range[1]']);
+                }
+            });
+            function addTrace(path, start, end, init) {
+                $('#loding').show();
+                var url = "/data/path" + path + "?format=complex&__count=300";
+                if (start) {
+                    url += "&__start=" + start;
+                }
+                if (end){
+                    url += "&__end=" + end;
+                }
+                Plotly.d3.json(url, function (err, rawData) {
+                    var oldTitle = $('#title').text();
+                    var commaIndex = oldTitle.indexOf('：');
+                    var newTitle = commaIndex > -1 ? oldTitle.substr(0, commaIndex) : oldTitle;
+                    if (err) {
+                        $('#title').text(newTitle + '：' + err.responseText).css('color', 'red');
+                        $('#loding').fadeOut();
+                        console.debug(err);
+                        return;
+                    }
+                    $('#title').text(newTitle).css('color', 'black');
+                    
+                    Plotly.addTraces(chartDom, {
+                        x: Plotly.d3.range(rawData.Start, rawData.End + rawData.DecimatedSampleInterval, rawData.DecimatedSampleInterval),
+                        y: rawData.Data,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: rawData.Title,
+                        path: path
+                    }).then(function () {
+                        if (init) {
+                            chartDom.layout.minX = chartDom.layout.xaxis.range[0];
+                            chartDom.layout.maxX = chartDom.layout.xaxis.range[1];
+                            chartDom.layout.minY = chartDom.layout.yaxis.range[0];
+                            chartDom.layout.maxY = chartDom.layout.yaxis.range[1];
+                        }
+                    });
+                    $('#loding').fadeOut();
+                });
+            }
+            //右键菜单
+            $("#scopeMenu ul li").click(function () {
+                switch ($(this).attr("id")) {
+                    case 'Reload':
+                        setAllRange(null, null);
+                        break;
+                    case 'ResetXScale':
+                        setXRange([chartDom.layout.minX, chartDom.layout.maxX]);
+                        break;
+                    case 'ResetYScale':
+                        setYRange([chartDom.layout.minY, chartDom.layout.maxY]);
+                        break;
+                    case 'AllSameScale':
+                        window.parent.AllSameScale(query.title, chartDom.layout.xaxis.range, chartDom.layout.yaxis.range);
+                        break;
+                    case 'AllSameXScale':
+                        window.parent.AllSameXScale(query.title, chartDom.layout.xaxis.range);
+                        break;
+                    case 'AllSameYScale':
+                        window.parent.AllSameYScale(query.title, chartDom.layout.yaxis.range);
+                        break;
+                    case 'OpenNewTab':
+                        window.open(location.href);
+                        break;
+                    default:
+                        break;
+                }
+                $("#scopeMenu").fadeOut(200);
+            });
+        });
+        window.setXRange = function (xrange) {
+            var update = {
+                'xaxis.range': xrange 
+            };
+            Plotly.relayout(chartDom, update);
+        }
+        window.setYRange = function (yrange) {
+            var update = {
+                'yaxis.range': yrange 
+            };
+            Plotly.relayout(chartDom, update);
+        }
+        window.setAllRange = function (xrange, yrange) {
+            var update = {
+                xaxis: { range: xrange },
+                yaxis: { range: yrange }
+            };
+            Plotly.relayout(chartDom, update);
+        }
+    </script>
+}

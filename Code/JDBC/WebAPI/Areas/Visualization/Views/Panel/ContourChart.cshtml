@@ -1,0 +1,70 @@
+﻿<ul>
+    <li id="OpenNewTab" class="showInFrame">Open in new tab</li>
+</ul>
+
+@section scripts
+{
+    <script type="text/javascript">
+        $(document).ready(function () {
+            query = getHashJson();
+            idArray = query.ids.split(',');
+            // 设置图表全局对象
+            window.chartDom = document.getElementById('chartContainer');
+            $('#title').text(query.title);
+            var layout = {
+                showlegend: true,
+                height: $(window).height(),
+                margin: { l: 30, r: 30, b: 30, t: 30, pad: 0 },
+                hovermode: 'closest',
+                legend: {
+                    'orientation': 'h'
+                }
+            };
+            //console.log(Plotly.Icons);
+            var options = {
+                showTips: false,
+                displayModeBar: true,
+                displaylogo: false,
+                scrollZoom: false,
+            };
+            var size = 100, x = new Array(size), y = new Array(size), z = new Array(size), i, j;
+
+            for (var i = 0; i < size; i++) {
+                x[i] = y[i] = -2 * Math.PI + 4 * Math.PI * i / size;
+                z[i] = new Array(size);
+            }
+
+            for (var i = 0; i < size; i++) {
+                for (j = 0; j < size; j++) {
+                    var r2 = x[i] * x[i] + y[j] * y[j];
+                    z[i][j] = Math.sin(x[i]) * Math.cos(y[j]) * Math.sin(r2) / Math.log(r2 + 1);
+                }
+            }
+
+            var data = [{
+                z: z,
+                x: x,
+                y: y,
+                type: 'contour'
+            }
+            ];
+            Plotly.plot(chartDom, data, layout, options);
+            $('#loding').fadeOut();
+            //右键菜单
+            $("#scopeMenu ul li").click(function () {
+                switch ($(this).attr("id")) {
+                    case 'ResetScale':
+                        setAllRange(null, null, null);
+                        break;
+                    case 'OpenNewTab':
+                        window.open(location.href);
+                        break;
+                    default:
+                        break;
+                }
+                $("#scopeMenu").fadeOut(200);
+            });
+        });
+    </script>
+}
+

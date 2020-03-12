@@ -1,0 +1,183 @@
+﻿@{
+    ViewBag.Title = "JDBC Remote API";
+}
+
+<div class="content-wrapper">
+    <div class="float-left">
+        <h1>
+            @ViewBag.Title
+            <a class="pull-right btn btn-default" href="/Help" target="_self">API Document</a>
+            <a class="pull-right btn btn-primary" href="/Visualization/Panel/Index">Visualization</a>
+        </h1>
+    </div>
+</div>
+<div style="margin-bottom: 10px;" id="request-container">
+    <div class="well" id="request-form">
+        <form onsubmit="return false;" method="POST" style="margin-bottom:0px" class="form-inline">
+            <h4>Headers:</h4>
+            <div class="row">
+                <div class="col-md-5">
+                    <input type="text" placeholder="name" style="width:100%;" id="headerName" />
+                </div>
+                <div class="col-md-5">
+                    <input type="text" placeholder="value" style="width:100%;" id="headerValue" />
+                </div>
+                <div class="col-md-2">
+                    <span class="glyphicon glyphicon-plus-sign" style="cursor:pointer;" id="addHeader"></span>
+                </div>
+            </div>
+            <table id="headers" border="1" rules="rows" frame="hsides" cellpadding="10" style="width:90%;display:none;margin-top:10px;">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Value</th>
+                        <th>Operation</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                </tbody>
+            </table>
+            <hr />
+            <div class="row">
+                <div class="col-md-2">
+                    <label style="margin: 0 5px; width: 45px;">Method</label>
+                    <select id="request-method" style="width: 80px;">
+                        <option>GET</option>
+                        <option>POST</option>
+                        <option>PUT</option>
+                        <option>DELETE</option>
+                    </select>
+                </div>
+                <div class="col-md-8">
+                    <input type="text" placeholder="url" style="width:100%;" name="request-url" id="request-url">
+                </div>
+                <div class="col-md-2">
+                    <button style="margin: 0 0 0 15px; padding: 4px 15px;" class="btn btn-danger" type="submit" id="request-button">SEND</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    <div style="margin-bottom:0px;display:none;" class="well" id="body">
+        <h4 style="margin-left: 6px;">Body</h4>
+        <textarea placeholder="Request Body" style="width: 100%; margin: 0px; height: 60px;" id="request-body"></textarea>
+    </div>
+    <img id="loding" src="~/Content/images/loding2.gif" style="display:none;"/>
+    <div id="request-error" style="color:red;word-break: break-all;"></div>
+    <ul id="request-result" style="word-break: break-all;">
+    </ul>
+</div>
+@section scripts
+{
+    <script>
+        $(function () {
+            $('#addHeader').click(function () {
+                var headerName = $('#headerName').val().trim();
+                var headerValue = $('#headerValue').val().trim();
+                if (headerName && headerValue) {
+                    $('#headers').append('<tr>' +
+                        '<td class="headerName">' + headerName + '</td>' +
+                        '<td class="headerValue">' + headerValue + '</td>' +
+                        '<td><span class="glyphicon glyphicon-minus-sign removeHeader" style="cursor:pointer;"></span></td>' +
+                        '</tr>');
+                }
+                if ($('#headers tbody tr').length > 0) {
+                    $('#headers').show();
+                }
+            });
+            $('#headers tbody').delegate('.removeHeader', 'click', function (event) {
+                $(this).parent().parent().remove();
+            });
+            $('#request-method').change(function () {
+                console.log($('#request-method').val());
+                switch ($('#request-method').val()) {
+                    case 'GET':
+                        $('#body').hide();
+                        break;
+                    case 'POST':
+                        $('#body').show();
+                        break;
+                    case 'PUT':
+                        $('#body').show()
+                        break;
+                    case 'DELETE':
+                        $('#body').hide();
+                        break;
+                    default:
+                        break;
+                }
+            });
+            $('#request-method').change();
+            $('#request-button').click(function () {
+                $('#request-result').empty();
+                $('#request-error').empty();
+                var requestMethod = $('#request-method').val();
+                var requestData = null;
+                if (requestMethod !== 'GET' || requestMethod !== 'DELETE') {
+                    requestData = $('#request-body').val();
+                }
+                $('#loding').show();
+                $.ajax({
+                    type:requestMethod,
+                    url:$('#request-url').val(), 
+                    data: requestData,
+                    beforeSend: setRequestHeader,
+                    success: showSuccess,
+                    error: showError,
+                    complete: done,
+                    xhr: progress
+                });
+            });
+        });
+        function setRequestHeader(request) {
+            for (var i = 0; i < $('#headers tbody tr').length; i++) {
+                var headerItem = $('#headers tbody tr').eq(i);
+                var headerName = headerItem.find('td.headerName').text();
+                var headerValue = headerItem.find('td.headerValue').text();
+                console.log(headerName, headerValue);
+                request.setRequestHeader(headerName, headerValue);
+            }
+        }
+        function showSuccess(data) {
+            console.log(data);
+            if(Object.prototype.toString.call(data) === '[object String]')
+            {
+                $('#request-result').append('<li>' + data + '</li>');
+            }
+            else
+            {
+                for (var i = 0; i < data.length; i++) {
+                    $('#request-result').append('<li>' + JSON.stringify(data[i]) + '</li>');
+                }
+            }
+        }
+        function showError(request, message, error) {
+            console.log(request);
+            if (request.responseJSON) {
+                $('#request-error').text(JSON.stringify(request.responseJSON.Fail));
+                if (request.responseJSON.Success) {
+                    for (var i = 0; i < request.responseJSON.Success.length; i++) {
+                        $('#request-result').append('<li>' + JSON.stringify(request.responseJSON.Success[i]) + '</li>');
+                    }
+                }
+            }
+            else if (request.responseText) {
+                $('#request-error').html(request.responseText);
+            }
+            else {
+                $('#request-error').html(request.statusText);
+            }
+        }
+        function done() {
+            $('#loding').hide();
+        }
+        function progress() {
+            var xhr = new window.XMLHttpRequest();
+            //Download progress
+            xhr.addEventListener("progress", function (evt) {
+                console.log(evt);
+            }, false);
+            return xhr;
+        }
+    </script>
+}
